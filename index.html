@@ -64,6 +64,47 @@
         #confirm-accusation-modal {
             background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent backdrop */
         }
+        /* Styles for Protocol Display */
+        #protocol-display {
+            background-color: #f8f8f8; /* Lighter background */
+            border: 1px solid #d1d5db; /* Gray border */
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Inter', sans-serif; /* Use standard font */
+            font-size: 0.875rem; /* Slightly smaller font */
+            line-height: 1.5;
+        }
+        #protocol-display h3 {
+            font-weight: 700; /* Bolder heading */
+            margin-bottom: 12px;
+            font-size: 1rem;
+            color: #1f2937; /* Darker heading */
+        }
+         #protocol-display ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-bottom: 10px;
+         }
+         #protocol-display li {
+            margin-bottom: 6px;
+            color: #4b5563; /* Medium gray text */
+         }
+         #protocol-display strong {
+             font-weight: 600; /* Semi-bold */
+             color: #111827; /* Slightly darker text for emphasis */
+         }
+         #protocol-display .protocol-section {
+             margin-bottom: 15px;
+         }
+         #protocol-display hr {
+             border-top: 1px dashed #d1d5db;
+             margin: 15px 0;
+         }
+         #protocol-display small {
+             font-size: 0.75rem;
+             color: #6b7280;
+         }
     </style>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
@@ -103,9 +144,12 @@
             <p><strong id="boss-name">Chef:</strong> <span id="boss-emoji"></span> <span id="briefing-text">Warte auf das Briefing...</span></p>
         </div>
 
-        <div class="mb-6">
+        <div id="protocol-display" class="hidden">
+            {/* Protocol content will be inserted here by JS */}
+        </div>
+
+        <div class="mb-6 mt-6">
             <h2 class="text-xl font-semibold mb-3 text-gray-700">Personen auswählen:</h2>
-            
             <div id="characters" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 sm:gap-4">
                 {/* Character buttons will be inserted here */}
             </div>
@@ -155,6 +199,8 @@
         const CONFIRM_ACCUSATION_NAME = document.getElementById('confirm-accusation-name');
         const CANCEL_ACCUSATION_BUTTON = document.getElementById('cancel-accusation-button');
         const CONFIRM_ACCUSATION_BUTTON = document.getElementById('confirm-accusation-button');
+        const PROTOCOL_DISPLAY = document.getElementById('protocol-display');
+
 
         let apiKey = '';
         let gameData = null;
@@ -250,72 +296,73 @@
         }
 
         async function generatePlot() {
-            // --- UPDATED PLOT PROMPT for 6 Suspects ---
+            // --- UPDATED PLOT PROMPT ---
             const plotPrompt = `
 Erstelle einen Kriminalfall für ein Text-Detektivspiel auf Deutsch. Der Spieler ist ein Kommissar.
 Die **sechs** Verdächtigen sind IMMER die folgenden Personen mit diesen Grundeigenschaften:
-1.  Arndt Strauß: Locker, schön und entspannt, aber auch sehr anziehend/flirty ("horny"), wird von Freunden oft Berndt genannt.
-2.  Lilit Ihlenburg: Spricht schwäbisch, frech, lockere Liebesbeziehung zu Dave Weixler.
-3.  Linus Appel: Arbeitet bei Check24, oft nicht da (Arbeit/Flamme), mag Cluedo.
-4.  Victoria Weinelt: Lebt im Maßmannwohnheim, studiert mit Paula Greichen, mag Krapfen.
-5.  Dave Weixler: Fußballspieler, arbeitet in der Bar Kaffee Kosmos, lockere Liebesbeziehung mit Lilit Ihlenburg.
-6.  Paula Graichen: Basketballtalent, lernt viel in der Bib, online Dating mit älteren Männern (z.B. Basilius).
+1.  Arndt Strauß: (Braune Haare, 1.86m), männlich, Locker, schön und entspannt, aber auch sehr anziehend/flirty ("horny").
+2.  Lilit Ihlenburg: (Braune Haare, 1.70m), weiblich, Spricht schwäbisch, frech, lockere Liebesbeziehung zu Dave Weixler.
+3.  Linus Appel: (Braune Haare, 1.83m), männlich, Arbeitet bei Check24, oft nicht da (Arbeit/Flamme), mag Cluedo.
+4.  Victoria Weinelt: (Braune Haare, 1.70m), weiblich, Lebt im Maßmannwohnheim, studiert mit Paula Greichen, mag Krapfen.
+5.  Dave Weixler: (Blond, 1.85m), männlich, Fußballspieler, arbeitet in der Bar Kaffee Kosmos, lockere Liebesbeziehung mit Lilit Ihlenburg.
+6.  Paula Graichen: (Blond, ca. 1.90m), weiblich, Basketballtalent, lernt viel in der Bib, online Dating mit älteren Männern (z.B. Basilius).
 
-**Hauptanweisung:** Generiere die JSON-Felder **direkt**. Stelle sicher, dass alle generierten Details (Alibis, Wissen, Motive, Hinweise, Fakten) **logisch konsistent** zueinander und zur Fallbeschreibung passen. Berücksichtige den **Tatzeitpunkt** bei Alibis und Wissen.
+**Hauptanweisung:** Generiere die JSON-Felder **direkt**. Stelle sicher, dass alle generierten Details (Alibis, Wissen, Motive, Hinweise, Fakten) **logisch konsistent** zueinander und zur Fallbeschreibung passen. Berücksichtige den **Tatzeitpunkt** bei Alibis und Wissen. Alibis müssen **spezifische Zeitangaben** und ggf. Interaktionen mit anderen Verdächtigen enthalten.
 
 Gib die Ausgabe NUR als JSON-Objekt zurück. Keine Markdown-Formatierung um das JSON.
 
 **Wichtige Anweisungen für den Fall:**
 1.  **Gleiche Verdachtslage:** Das Ziel ist ein Fall, bei dem **alle sechs Verdächtigen gleichermaßen plausibel** erscheinen. Es darf **keinen offensichtlichen Hauptverdächtigen** geben.
 2.  **Motive für Alle:** Jeder der sechs Verdächtigen **muss** ein **starkes, plausibles Motiv** haben.
-3.  **Beziehungen:** Beschreibe kurz Beziehungen der Verdächtigen untereinander (basierend auf den Vorgaben und zusätzlichen Ideen) und zum Opfer in 'rolle' oder 'wissen'.
-4.  **Hinweise & Fakten:**
-    * **'entscheidende_hinweise' (2-3 Stück):** Fakten, die (in Kombination) einen **Widerspruch im Alibi/Wissen des Täters** aufdecken. Dürfen **NICHT** der Polizei bekannt sein und müssen von Verdächtigen stammen. Format: "Fakt / Bekannt von: [Name(n) Verdächtige(r)] / (Widerspricht: [Alibi/Aussage von Täter])"
-    * **'neutrale_fakten' (ca. 10-15 Stück):** Fakten/Beobachtungen. Sollen **mehrdeutig sein und potenziell alle Verdächtigen gleichermaßen belasten**, ohne einen klar zu favorisieren oder auszuschließen. Können der Polizei bekannt sein. Format: "Fakt / Bekannt von: [Name(n) oder Polizei]"
+3.  **Verdachtsgrund für Alle:** Jeder Verdächtige **muss** einen kurzen **'verdachts_grund'** haben (z.B. Motiv, Gelegenheit, widersprüchliche erste Aussage).
+4.  **Beziehungen:** Beschreibe kurz Beziehungen der Verdächtigen untereinander und zum Opfer in 'rolle' oder 'wissen'.
+5.  **Hinweise & Fakten:**
+    * **'entscheidende_hinweise' (2-3 Stück):** Fakten (Aktionen, Zeiten, Orte, Aussagen), die (in Kombination) einen **Widerspruch im Alibi/Wissen des Täters** aufdecken. Dürfen **NICHT** der Polizei bekannt sein und müssen von Verdächtigen stammen. **Keine Hinweise auf physische Beweisstücke**. Müssen durch Gespräche überprüfbar sein. Format: "Fakt (überprüfbar durch andere Aussage) / Bekannt von: [NUR Name(n) Verdächtige(r), KEINE Polizei!] / (Widerspricht: [Alibi/Aussage von Täter])"
+    * **'neutrale_fakten' (ca. 30 Stück):** Fakten/Beobachtungen. Sollen **mehrdeutig sein und potenziell alle Verdächtigen gleichermaßen belasten**, ohne einen klar zu favorisieren oder auszuschließen. Einige davon sollen **verifizierbare Zeit-/Ortsangaben** enthalten und der Polizei bekannt sein. Format: "Fakt / Bekannt von: [Name(n) oder Polizei]"
     * Stelle sicher, dass die Hinweise und Fakten so verteilt sind, dass **jeder Verdächtige mit einigen Fakten oder Hinweisen in Verbindung gebracht wird**.
-5.  **Realismus & Subtilität:** Der Fall soll realistisch sein. Die Lösung ergibt sich aus **Widersprüchen**, nicht aus einem einzelnen Beweis. Hinweise sollen subtil sein.
-6.  **Täter:** Wähle EINEN der sechs als Täter aus. Motivation muss passen. Alibi muss Lücken/Widersprüche haben.
-7.  **Polizist:** Kennt Täter nicht, gibt nur die ihm bekannten (mehrdeutigen) Fakten absolut neutral weiter.
+6.  **Realismus & Subtilität:** Der Fall soll realistisch sein. Die Lösung ergibt sich aus **Widersprüchen**, nicht aus einem einzelnen Beweis. Hinweise sollen subtil sein.
+7.  **Täter:** Wähle EINEN der sechs als Täter aus. Motivation muss passen. Alibi muss Lücken/Widersprüche haben.
+8.  **Polizist:** Kennt Täter nicht, gibt nur die ihm bekannten (mehrdeutigen, teils verifizierbaren) Fakten absolut neutral weiter.
 
 JSON-Struktur:
 {
   "fallbeschreibung": "Kurze Beschreibung des Falls.",
-  "tatort": "Ort des Geschehens.",
+  "tatort": "Ein spezifischer Ort in München (z.B. Englischer Garten, Bereich der TUM/LMU, eine Bar wie 'Kaffee Kosmos', Maßmannwohnheim, etc.).",
   "zeitpunkt": "Zeitpunkt des Geschehens.",
-  "opfer": { "name": "...", "beschreibung": "..." },
+  "opfer": { "name": "Generiere einen kreativen, ungewöhnlichen Namen für das Opfer", "beschreibung": "..." },
   "boss": { "name": "Chef Inspektor Tschiggerillo", "emoji": "👨‍✈️", "briefing": "..." },
   "polizist": { "id": "polizist_chris", "name": "Polizist Chris", "emoji": "👮‍♂️", "rolle": "..." },
-  "verdaechtige": [ // Genau diese 6 Verdächtigen
-    { "id": "arndt", "name": "Arndt Strauß", "emoji": "😎", "rolle": "Locker, schön, horny. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "alibi": "...", "wissen": "..." },
-    { "id": "lilit", "name": "Lilit Ihlenburg", "emoji": "💁‍♀️", "rolle": "Schwäbisch, frech, lockere Beziehung zu Dave. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "alibi": "...", "wissen": "..." },
-    { "id": "linus", "name": "Linus Appel", "emoji": "💼", "rolle": "Check24-Mitarbeiter, oft abwesend (Job/Flamme), mag Cluedo. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "alibi": "...", "wissen": "..." },
-    { "id": "victoria", "name": "Victoria Weinelt", "emoji": "🍩", "rolle": "Wohnt im Maßmannwohnheim, studiert mit Paula, mag Krapfen. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "alibi": "...", "wissen": "..." },
-    { "id": "dave", "name": "Dave Weixler", "emoji": "⚽", "rolle": "Fußballspieler, arbeitet im Kaffee Kosmos, lockere Beziehung zu Lilit. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "alibi": "...", "wissen": "..." },
-    { "id": "paula", "name": "Paula Graichen", "emoji": "🏀", "rolle": "Basketballtalent, lernt viel (Bib), Online-Dating (Basilius). (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "alibi": "...", "wissen": "..." }
+  "verdaechtige": [
+    { "id": "arndt", "name": "Arndt Strauß", "emoji": "😎", "rolle": "(Braune Haare, 1.86m) Locker, schön, horny. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "verdachts_grund": "Kurzer Grund, warum verdächtig.", "alibi": "Spezifisches Alibi (Zeiten/Interaktionen).", "wissen": "..." },
+    { "id": "lilit", "name": "Lilit Ihlenburg", "emoji": "💁‍♀️", "rolle": "(Braune Haare, 1.70m) Schwäbisch, frech, lockere Beziehung zu Dave. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "verdachts_grund": "...", "alibi": "...", "wissen": "..." },
+    { "id": "linus", "name": "Linus Appel", "emoji": "💼", "rolle": "(Braune Haare, 1.83m) Check24, oft abwesend, mag Cluedo. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "verdachts_grund": "...", "alibi": "...", "wissen": "..." },
+    { "id": "victoria", "name": "Victoria Weinelt", "emoji": "🍩", "rolle": "(Braune Haare, 1.70m) Maßmannwohnheim, studiert mit Paula, mag Krapfen. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "verdachts_grund": "...", "alibi": "...", "wissen": "..." },
+    { "id": "dave", "name": "Dave Weixler", "emoji": "⚽", "rolle": "(Blond, 1.85m) Fußballspieler, Kaffee Kosmos, lockere Beziehung zu Lilit. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "verdachts_grund": "...", "alibi": "...", "wissen": "..." },
+    { "id": "paula", "name": "Paula Graichen", "emoji": "🏀", "rolle": "(Blond, ca. 1.90m) Basketballtalent, lernt viel (Bib), Online-Dating. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "verdachts_grund": "...", "alibi": "...", "wissen": "..." }
   ],
   "taeter_id": "...", // EINE ID aus: 'arndt', 'lilit', 'linus', 'victoria', 'dave', 'paula'
   "entscheidende_hinweise": [
-    "Fakt / Bekannt von: [NUR Name(n) Verdächtige(r), KEINE Polizei!] / (Widerspricht: [Alibi/Aussage von Täter])",
+    "Fakt (überprüfbar durch andere Aussage) / Bekannt von: [NUR Name(n) Verdächtige(r), KEINE Polizei!] / (Widerspricht: [Alibi/Aussage von Täter])",
     // ... (2-3 Einträge)
   ],
   "neutrale_fakten": [
       "Fakt / Bekannt von: [Name(n) oder Polizei]",
-      // ... (ca. 40 Einträge)
+      // ... (ca. 30 Einträge) // Anzahl erhöht
   ],
   "loesung_erklaerung": "Erklärung, welcher Widerspruch den Täter entlarvt."
 }
 
 Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Felder logisch konsistent sind.
 `;
-            // --- END OF SIMPLIFIED PLOT PROMPT ---
+            // --- END OF UPDATED PLOT PROMPT ---
 
 
             let attempts = 0;
             const maxAttempts = 3;
             let rawResponse = null;
             gameData = null;
-            // Keep token limit reasonable, adjust if needed for 6 suspects
-            const plotGenerationConfig = { maxOutputTokens: 3500 };
+            // Set temperature for plot generation, keep token limit high
+            const plotGenerationConfig = { maxOutputTokens: 4096, temperature: 0.75 };
 
             while (attempts < maxAttempts && !gameData) {
                 attempts++;
@@ -326,17 +373,17 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
                     try {
                         if (rawResponse.trim().startsWith('{') && rawResponse.trim().endsWith('}')) {
                             gameData = JSON.parse(rawResponse);
-                            // Updated validation for 6 suspects
                             const validIds = ['arndt', 'lilit', 'linus', 'victoria', 'dave', 'paula'];
+                            // Perform validation checks
                             if (gameData &&
-                                gameData.verdaechtige && gameData.verdaechtige.length === 6 && // Check for 6 suspects
-                                gameData.verdaechtige.every(v => validIds.includes(v.id)) && // Check if all IDs are the fixed ones
-                                gameData.taeter_id && validIds.includes(gameData.taeter_id) && // Check if taeter_id is one of the fixed ones
+                                gameData.verdaechtige && gameData.verdaechtige.length === 6 &&
+                                gameData.verdaechtige.every(v => validIds.includes(v.id)) &&
+                                gameData.taeter_id && validIds.includes(gameData.taeter_id) &&
                                 gameData.boss && gameData.polizist &&
                                 gameData.entscheidende_hinweise && Array.isArray(gameData.entscheidende_hinweise) &&
                                 gameData.neutrale_fakten && Array.isArray(gameData.neutrale_fakten) &&
                                 gameData.loesung_erklaerung &&
-                                gameData.verdaechtige.every(v => v.name && v.emoji && v.rolle && v.motiv && v.alibi && v.wissen)
+                                gameData.verdaechtige.every(v => v.name && v.emoji && v.rolle && v.motiv && v.verdachts_grund && v.alibi && v.wissen)
                                )
                             {
                                 let policeIsSourceOfDecisive = false;
@@ -356,7 +403,6 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
                                 console.log("Debug - Entscheidende Hinweise:", gameData.entscheidende_hinweise);
                                 console.log("Debug - Neutrale Fakten:", gameData.neutrale_fakten);
 
-                                // Ensure correct suspect order for display (optional but good practice)
                                 const fixedSuspects = [];
                                 fixedSuspects.push(gameData.verdaechtige.find(v => v.id === 'arndt'));
                                 fixedSuspects.push(gameData.verdaechtige.find(v => v.id === 'lilit'));
@@ -364,16 +410,13 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
                                 fixedSuspects.push(gameData.verdaechtige.find(v => v.id === 'victoria'));
                                 fixedSuspects.push(gameData.verdaechtige.find(v => v.id === 'dave'));
                                 fixedSuspects.push(gameData.verdaechtige.find(v => v.id === 'paula'));
-                                // Filter out potential nulls if AI failed to generate one
                                 gameData.verdaechtige = fixedSuspects.filter(s => s);
-                                // Double check length after filtering, fail if not 6
                                 if (gameData.verdaechtige.length !== 6) {
-                                    console.error("Validation Failed: Not all 6 suspects were found in the generated data.");
+                                    console.error("Validation Failed: Not all 6 suspects were found/generated correctly.");
                                     gameData = null;
                                     continue;
                                 }
-
-                                break; // Exit loop on success
+                                break;
                             } else {
                                 console.error("Generated JSON is invalid, incomplete, or failed validation:", gameData);
                                 gameData = null;
@@ -388,7 +431,7 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
                         gameData = null;
                     }
                 } else {
-                     break; // API call failed
+                     break;
                 }
                  if (attempts < maxAttempts && !gameData) {
                      await new Promise(resolve => setTimeout(resolve, 1500));
@@ -406,12 +449,10 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
         function displayCharacters() {
             CHARACTERS_DIV.innerHTML = '';
             conversationHistory = {};
-            // Display suspects first using the potentially re-ordered array
             gameData.verdaechtige.forEach(char => {
                 addCharacterButton(char);
                 conversationHistory[char.id] = [];
             });
-            // Then display the police officer
             addCharacterButton(gameData.polizist);
             conversationHistory[gameData.polizist.id] = [];
         }
@@ -419,14 +460,13 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
 
         function addCharacterButton(char) {
              const button = document.createElement('button');
-             // Adjusted classes for potentially smaller buttons if needed with more items
              button.classList.add('character-button', 'flex', 'flex-col', 'items-center', 'p-2', 'sm:p-3', 'bg-gray-200', 'rounded-lg', 'hover:bg-gray-300', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400');
              button.dataset.charId = char.id;
              const emojiSpan = document.createElement('span');
-             emojiSpan.classList.add('text-3xl', 'sm:text-4xl', 'mb-1', 'sm:mb-2'); // Slightly smaller emoji potentially
+             emojiSpan.classList.add('text-3xl', 'sm:text-4xl', 'mb-1', 'sm:mb-2');
              emojiSpan.textContent = char.emoji;
              const nameSpan = document.createElement('span');
-             nameSpan.classList.add('text-xs', 'sm:text-sm', 'font-semibold', 'text-center', 'text-gray-700'); // Slightly smaller text
+             nameSpan.classList.add('text-xs', 'sm:text-sm', 'font-semibold', 'text-center', 'text-gray-700');
              nameSpan.textContent = char.name;
              button.appendChild(emojiSpan);
              button.appendChild(nameSpan);
@@ -468,7 +508,6 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
             if (charId === gameData.polizist?.id) {
                 return gameData.polizist;
             }
-            // Check the 6 fixed suspects
             const suspect = gameData.verdaechtige?.find(v => v.id === charId);
              if (suspect) return suspect;
              console.warn(`Character ID "${charId}" not found among fixed IDs or police.`)
@@ -518,7 +557,7 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
              const currentUserHistory = conversationHistory[selectedCharacterId] || [];
              currentUserHistory.push({ role: 'user', parts: [{ text: question }] });
 
-             const policeKnownFacts = (gameData.hinweise_und_fakten || []).filter(fact =>
+             const policeKnownFacts = (gameData.neutrale_fakten || []).filter(fact =>
                  /\/\s*Bekannt von:.*polizei/i.test(fact)
              );
              const policeKnownFactsList = policeKnownFacts.join('; ');
@@ -527,7 +566,10 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
              if (selectedCharacterId === gameData.polizist.id) {
                   contextClues = `Bekannte neutrale Fakten (die die Polizei kennt): ${policeKnownFactsList}`;
              } else {
-                  const allCluesAndFacts = gameData.hinweise_und_fakten || [];
+                  const allCluesAndFacts = [
+                     ...(gameData.entscheidende_hinweise || []),
+                     ...(gameData.neutrale_fakten || [])
+                  ];
                   contextClues = `Bekannte Hinweise/Fakten: ${allCluesAndFacts.join('; ')}`;
              }
 
@@ -546,29 +588,28 @@ Deine feste Charakterbeschreibung: ${character.rolle}.
 Dein generiertes Motiv in diesem Fall: ${character.motiv || 'Unbekannt'}.
 Dein generiertes Alibi in diesem Fall: ${character.alibi || 'Unbekannt'}.
 Dein generiertes spezifisches Wissen in diesem Fall: ${character.wissen || 'Nichts Besonderes'}.
+Dein Grund für Verdacht (intern generiert): ${character.verdachts_grund || 'Unbekannt'}.
 `;
+
             let baseInstructions = '';
             const otherSuspects = gameData.verdaechtige.filter(v => v.id !== selectedCharacterId);
             const otherSuspectNames = otherSuspects.map(v => v.name).join(', ');
-             // Find clues that specifically contradict the culprit
-             const contradictingClues = (gameData.hinweise_und_fakten || []).filter(h => /\/\s*\(Widerspricht:.*\)/i.test(h) );
+             const contradictingClues = (gameData.entscheidende_hinweise || []);
 
 
             if (selectedCharacterId === gameData.taeter_id) {
                 const innocentSuspects = gameData.verdaechtige.filter(v => v.id !== gameData.taeter_id);
                 const innocentSuspectNames = innocentSuspects.map(v => v.name).join(', ');
-                 baseInstructions = `Du bist der Täter in diesem Fall. Dein Ziel ist es, unentdeckt zu bleiben. Antworte auf Fragen so, dass du unschuldig wirkst. Lenke Verdacht geschickt ab, lüge wenn nötig über dein Alibi oder Wissen, aber vermeide offensichtliche Widersprüche zu bekannten Fakten oder den Hinweisen, die dich belasten könnten (${contradictingClues.join('; ')}), falls du darauf angesprochen wirst. **Wenn es passt, versuche plausibel, den Verdacht auf einen der anderen unschuldigen Verdächtigen (${innocentSuspectNames}) zu lenken, eventuell unter Verwendung von Fakten aus der Gesamtliste.** Sei vielleicht nervös oder übermäßig ruhig.`;
+                 baseInstructions = `Du bist der Täter in diesem Fall. Dein Ziel ist es, unentdeckt zu bleiben. Antworte auf Fragen so, dass du unschuldig wirkst. Lenke Verdacht geschickt ab, lüge wenn nötig über dein Alibi oder Wissen, aber vermeide offensichtliche Widersprüche zu bekannten Fakten oder den Hinweisen, die dich belasten könnten (${contradictingClues.join('; ')}), falls du darauf angesprochen wirst. **Suche aktiv nach Gelegenheiten, um Beobachtungen oder Verdächtigungen über andere unschuldige Verdächtige (${innocentSuspectNames}) zu äußern, um von dir abzulenken, eventuell unter Verwendung der neutralen Fakten.** Sei vielleicht nervös oder übermäßig ruhig.`;
             } else if (gameData.verdaechtige.some(v => v.id === selectedCharacterId)) {
-                 baseInstructions = `Du bist unschuldig in diesem Fall, aber vielleicht nervös oder hast etwas anderes zu verbergen (basierend auf deinem 'Wissen'). Antworte ehrlich auf Fragen bezüglich deines tatsächlichen Wissens und Alibis. Kommentiere Hinweise/Fakten nur, wenn du direkt danach gefragt wirst oder sie dein Alibi stützen/widerlegen. **Wenn es passt und zu deinem Wissen passt, erwähne beiläufig eine Beobachtung oder einen Verdacht gegenüber einem der anderen Verdächtigen (${otherSuspectNames}), aber erfinde nichts.** Gib nicht mehr preis als nötig.`;
+                 baseInstructions = `Du bist unschuldig in diesem Fall, aber vielleicht nervös oder hast etwas anderes zu verbergen (basierend auf deinem 'Wissen'). Antworte ehrlich auf Fragen bezüglich deines tatsächlichen Wissens und Alibis. Kommentiere Hinweise/Fakten nur, wenn du direkt danach gefragt wirst oder sie dein Alibi stützen/widerlegen. **Suche aktiv nach Gelegenheiten, um Beobachtungen oder Verdächtigungen über andere Verdächtige (${otherSuspectNames}) zu äußern, besonders wenn deren Aussagen deinem Wissen widersprechen, aber erfinde nichts.** Gib nicht mehr preis als nötig.`;
             } else if (selectedCharacterId === gameData.polizist.id) {
-                 baseInstructions = `Du bist ${gameData.polizist.name}. Du hilfst dem Kommissar NUR mit objektiven Fakten, die der Polizei bekannt sind (diese stammen aus der Liste 'hinweise_und_fakten', die mit 'Bekannt von: Polizei' markiert sind). Berichte diese Fakten **absolut neutral und ohne jede Interpretation oder Andeutung**, wer verdächtig sein könnte. Du weißt NICHT, wer der Täter ist und kennst die Hinweise nicht, die Widersprüche aufdecken. Äußere KEINE Vermutungen. Wenn du nach einem spezifischen Hinweis gefragt wirst, den du nicht kennst, sage, dass dir dazu nichts bekannt ist oder es nicht Teil der polizeilichen Erkenntnisse ist. Deine bekannten Fakten sind: ${policeKnownFactsList}`;
+                 baseInstructions = `Du bist ${gameData.polizist.name}. Du hilfst dem Kommissar NUR mit objektiven Fakten, die der Polizei bekannt sind (diese stammen aus der Liste der 'neutrale_fakten', die mit 'Bekannt von: Polizei' markiert sind). Berichte diese Fakten **absolut neutral und ohne jede Interpretation oder Andeutung**, wer verdächtig sein könnte. Du weißt NICHT, wer der Täter ist und kennst die entscheidenden Hinweise nicht. Äußere KEINE Vermutungen. Wenn du nach einem spezifischen Hinweis gefragt wirst, den du nicht kennst (weil er entscheidend ist oder von Verdächtigen stammt), sage, dass dir dazu nichts bekannt ist oder es nicht Teil der polizeilichen Erkenntnisse ist. Deine bekannten Fakten sind: ${policeKnownFactsList}`;
             }
             let finalInstructions = baseInstructions;
-            // --- ADD ACCENT INSTRUCTION FOR LILIT ---
             if (selectedCharacterId === 'lilit') {
                 finalInstructions = `**WICHTIG: Antworte IMMER mit einem leichten schwäbischen Akzent (z.B. Grammatik, Satzbau, typische Worte/Ausdrücke wie 'gell', 'net', 'ned').** ${baseInstructions}`;
             }
-            // --- END OF ACCENT INSTRUCTION ---
 
             const finalPrompt = `
 Kontext: Dies ist ein Text-Detektivspiel. Der Spieler ist der Kommissar.
@@ -581,7 +622,8 @@ ${finalInstructions}
 Der Kommissar hat dich gerade gefragt: "${question}"
 Antworte kurz und prägnant (maximal 2-3 Sätze) in der Ich-Form aus der Sicht von ${character.name}, auf Deutsch. Bleibe im Charakter und beachte deine Rolle, dein Wissen und deine Anweisungen (inkl. Akzent falls zutreffend!). Gib keine Informationen preis, die du laut deiner Rolle nicht wissen kannst. Gib NUR die reine Antwort der Figur zurück, ohne zusätzliche Erklärungen wie "Als [Name] würde ich sagen: ...". Wenn die Frage unklar ist oder nichts mit dem Fall zu tun hat, weise höflich darauf hin.
 `;
-            const chatGenerationConfig = { maxOutputTokens: 300 };
+            // Set temperature and slightly increased tokens for character responses
+            const chatGenerationConfig = { maxOutputTokens: 350, temperature: 0.8 };
             const response = await callGeminiAPI(finalPrompt, currentUserHistory, chatGenerationConfig);
             if (response !== null) {
                  addChatMessage(character.name, response, 'ai');
@@ -639,6 +681,43 @@ Antworte kurz und prägnant (maximal 2-3 Sätze) in der Ich-Form aus der Sicht v
         }
 
         // --- Initialization ---
+        function displayProtocol() {
+            if (!gameData) return;
+
+            const allPoliceFacts = (gameData.neutrale_fakten || [])
+                .filter(fact => /\/\s*Bekannt von:.*polizei/i.test(fact))
+                .map(fact => fact.split('/ Bekannt von:')[0].trim());
+
+            const shuffledPoliceFacts = allPoliceFacts.sort(() => 0.5 - Math.random());
+            const maxFactsToShow = Math.min(5, shuffledPoliceFacts.length);
+            const selectedPoliceFacts = shuffledPoliceFacts.slice(0, maxFactsToShow);
+
+            const policeFactsHTML = selectedPoliceFacts.length > 0
+                ? selectedPoliceFacts.map(fact => `<li>- ${fact}</li>`).join('')
+                : '<li>Keine spezifischen Fakten bisher polizeibekannt.</li>';
+
+            let protocolHTML = `<div class="protocol-section"><h3>Ermittlungsprotokoll (Auszug)</h3>`;
+            protocolHTML += `<strong>Fall:</strong> ${gameData.fallbeschreibung}<br>`;
+            protocolHTML += `<strong>Ort:</strong> ${gameData.tatort}<br>`;
+            protocolHTML += `<strong>Zeit:</strong> ${gameData.zeitpunkt}<br>`;
+            if (gameData.opfer) {
+                 protocolHTML += `<strong>Opfer:</strong> ${gameData.opfer.name} (${gameData.opfer.beschreibung})<br>`;
+            }
+            protocolHTML += `</div><hr><div class="protocol-section"><strong>Verdächtige Personen:</strong><ul>`;
+            gameData.verdaechtige.forEach(suspect => {
+                 const roleMatch = suspect.rolle.match(/\(([^)]+)\)/);
+                 const physicalDesc = roleMatch ? roleMatch[1] : '';
+                 protocolHTML += `<li><strong>${suspect.name}</strong> ${suspect.emoji} ${physicalDesc ? `(${physicalDesc})` : ''}<br>`;
+                 protocolHTML += `<small>&nbsp;&nbsp;Grund für Verdacht: ${suspect.verdachts_grund || 'Unbekannt'}</small></li>`;
+            });
+            protocolHTML += `</ul></div><hr><div class="protocol-section"><strong>Polizeibekannte Fakten (Auswahl):</strong><ul>${policeFactsHTML}</ul></div>`;
+            protocolHTML += `<br><small>(Weitere Details, Alibis und entscheidende Hinweise müssen durch Befragung ermittelt werden.)</small>`;
+
+            PROTOCOL_DISPLAY.innerHTML = protocolHTML;
+            PROTOCOL_DISPLAY.classList.remove('hidden');
+        }
+
+
         async function initializeGame() {
              hideApiKeyError();
              apiKey = API_KEY_INPUT.value.trim();
@@ -660,6 +739,9 @@ Antworte kurz und prägnant (maximal 2-3 Sätze) in der Ich-Form aus der Sicht v
                  BOSS_NAME_EL.textContent = gameData.boss.name + ':';
                  BOSS_EMOJI_EL.textContent = gameData.boss.emoji;
                  BRIEFING_TEXT_EL.textContent = gameData.boss.briefing;
+
+                 displayProtocol();
+
                  displayCharacters();
                  GAME_CONTAINER.classList.remove('hidden');
                  gameEnded = false;
