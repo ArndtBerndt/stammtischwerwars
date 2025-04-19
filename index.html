@@ -317,7 +317,9 @@ Gib die Ausgabe NUR als JSON-Objekt zurück. Keine Markdown-Formatierung um das 
 3.  **Verdachtsgrund für Alle:** Jeder Verdächtige **muss** einen kurzen **'verdachts_grund'** haben (z.B. Motiv, Gelegenheit, widersprüchliche erste Aussage).
 4.  **Beziehungen:** Beschreibe kurz Beziehungen der Verdächtigen untereinander und zum Opfer in 'rolle' oder 'wissen'.
 5.  **Hinweise & Fakten:**
-    * **'entscheidende_hinweise' (2-3 Stück):** Fakten (Aktionen, Zeiten, Orte, Aussagen), die (in Kombination) einen **Widerspruch im Alibi/Wissen des Täters** aufdecken. Dürfen **NICHT** der Polizei bekannt sein und müssen von Verdächtigen stammen. **Keine Hinweise auf physische Beweisstücke**. Müssen durch Gespräche überprüfbar sein. Format: "Fakt (überprüfbar durch andere Aussage) / Bekannt von: [NUR Name(n) Verdächtige(r), KEINE Polizei!] / (Widerspricht: [Alibi/Aussage von Täter])"
+    * **'entscheidende_hinweise' (genau 2-3 Stück):** Dies sind Fakten (Aktionen, Zeiten, Orte, Aussagen), die **speziell dazu dienen, den tatsächlichen Täter zu überführen**, indem sie (oft erst **in Kombination miteinander oder mit anderen Aussagen**) einen **klaren Widerspruch im Alibi oder Wissen des Täters** aufdecken. Sie dürfen **ABSOLUT NICHT** der Polizei bekannt sein und müssen von Verdächtigen stammen. **Keine Hinweise auf physische Beweisstücke** (Fingerabdrücke, DNA etc.), die der Spieler nicht sehen/untersuchen kann! Der Widerspruch muss sich aus dem **Vergleich von Aussagen/Wissen/Alibis** ergeben. Sie sollen **nicht sofort offensichtlich** sein, aber **in Kombination eindeutig** auf die Schuld des Täters hinweisen. Format: "Fakt (überprüfbar durch andere Aussage) / Bekannt von: [NUR Name(n) Verdächtige(r), KEINE Polizei!] / (Widerspricht: [Alibi/Aussage von Täter])"
+        * *Gutes Beispiel:* "Fakt: Arndt sagt, er war um 22 Uhr allein zuhause / Bekannt von: Arndt / (Widerspricht: Lilit sagt, sie hat Arndt um 22 Uhr nahe dem Tatort gesehen)"
+        * *Gutes Beispiel:* "Fakt: Moritz behauptet, das Opfer kaum gekannt zu haben / Bekannt von: Moritz / (Widerspricht: Dave sagt, Moritz und Opfer hatten Streit)"
     * **'neutrale_fakten' (ca. 30 Stück):** Fakten/Beobachtungen. Sollen **mehrdeutig sein und potenziell alle Verdächtigen gleichermaßen belasten**, ohne einen klar zu favorisieren oder auszuschließen. Einige davon sollen **verifizierbare Zeit-/Ortsangaben** enthalten und der Polizei bekannt sein. Format: "Fakt / Bekannt von: [Name(n) oder Polizei]"
     * Stelle sicher, dass die Hinweise und Fakten so verteilt sind, dass **jeder Verdächtige mit einigen Fakten oder Hinweisen in Verbindung gebracht wird**.
 6.  **Realismus & Subtilität:** Der Fall soll realistisch sein. Die Lösung ergibt sich aus **Widersprüchen**, nicht aus einem einzelnen Beweis. Hinweise sollen subtil sein.
@@ -341,15 +343,15 @@ JSON-Struktur:
     { "id": "paula", "name": "Paula Graichen", "emoji": "🏀", "rolle": "(Blond, ca. 1.90m) Basketballtalent, lernt viel (Bib), Online-Dating. (Beziehung zum Fall/Opfer/anderen).", "motiv": "Starkes Motiv!", "verdachts_grund": "...", "alibi": "...", "wissen": "..." }
   ],
   "taeter_id": "...", // EINE ID aus: 'arndt', 'lilit', 'linus', 'victoria', 'dave', 'paula'
-  "entscheidende_hinweise": [
+  "entscheidende_hinweise": [ // Genau 2-3 Hinweise auf Widersprüche beim TÄTER, durch Gespräche überprüfbar, KEINE Beweisstücke
     "Fakt (überprüfbar durch andere Aussage) / Bekannt von: [NUR Name(n) Verdächtige(r), KEINE Polizei!] / (Widerspricht: [Alibi/Aussage von Täter])",
     // ... (2-3 Einträge)
   ],
-  "neutrale_fakten": [
+  "neutrale_fakten": [ // Mehrdeutig, belasten alle, teils Polizei bekannt + verifizierbar
       "Fakt / Bekannt von: [Name(n) oder Polizei]",
       // ... (ca. 30 Einträge) // Anzahl erhöht
   ],
-  "loesung_erklaerung": "Erklärung, welcher Widerspruch den Täter entlarvt."
+  "loesung_erklaerung": "Erklärung, welcher Widerspruch (oder Kombination entscheidender Hinweise) den Täter entlarvt."
 }
 
 Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Felder logisch konsistent sind.
@@ -361,7 +363,6 @@ Stelle sicher, dass das JSON vollständig und korrekt formatiert ist und alle Fe
             const maxAttempts = 3;
             let rawResponse = null;
             gameData = null;
-            // Set temperature for plot generation, keep token limit high
             const plotGenerationConfig = { maxOutputTokens: 4096, temperature: 0.75 };
 
             while (attempts < maxAttempts && !gameData) {
@@ -594,6 +595,7 @@ Dein Grund für Verdacht (intern generiert): ${character.verdachts_grund || 'Unb
             let baseInstructions = '';
             const otherSuspects = gameData.verdaechtige.filter(v => v.id !== selectedCharacterId);
             const otherSuspectNames = otherSuspects.map(v => v.name).join(', ');
+             // Find clues that specifically contradict the culprit
              const contradictingClues = (gameData.entscheidende_hinweise || []);
 
 
